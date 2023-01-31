@@ -1,0 +1,44 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: myapps
+  labels:
+    apps: wordpress-and-mysql
+spec:
+  selector:
+    matchLabels:
+      apps: wordpress-and-mysql
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        apps: wordpress-and-mysql
+    spec:
+      containers:
+      - name: wordpress-container
+        image: wordpress
+        resources:
+          limits:
+            cpu: 500m
+          requests:
+            cpu: 200m
+        envFrom:
+        - configMapRef:
+            name: pod-configmap
+      initContainers:
+      - name: init-mysql
+        image: ggnika007/mysql-dnsutils
+        command: ['sh', '-c', "until nslookup mydb.$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace).svc.cluster.local; do echo waiting for mydb; sleep 5; done"]
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: pod-secret
+              key: password
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /data
+      volumes:
+      - name: mysql-storage
+        persistentVolumeClaim:
+          claimName: pvc-for-pods

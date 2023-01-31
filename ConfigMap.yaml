@@ -1,0 +1,11 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: pod-configmap
+data:
+  database: mysql
+  database_uri: mysql://localhost:3306
+
+  system.interface.properties: |
+    ui.color1=red
+    ui.color2=green
